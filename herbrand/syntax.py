@@ -1,5 +1,6 @@
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty, abstractmethod
 import itertools
+import re
 
 class Word(object):
     def __init__(self, label):
@@ -15,22 +16,30 @@ class Word(object):
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.label)
 
+    def __lt__(self, other):
+        return self.label < other.label
+
+    def __eq__(self, other):
+        return self.label == other.label
+
 class ObjectVariable(Word):
     def __init__(self, label):
-        # TODO: Assert begins with u v w x y z
+        assert(len(label) > 0)
+        assert(re.match('^[u-z]{1}', label))
         super(ObjectVariable, self).__init__(label)
 
 class Constant(Word):
     def __init__(self, label):
-        # TODO: Assert begins with a-t or numbers
+        assert(len(label) > 0)
+        assert(re.match('^[a-t0-9]{1}', label))
         super(Constant, self).__init__(label)
 
-# Objects e.g. joe, stanford, usa, 2345
 class ObjectConstant(Constant):
+    """ Objects e.g. joe, stanford, usa, 2345. """
     pass
 
-# Functions such as mother, father, age, plus, times
 class FunctionConstant(Constant):
+    """ Relations such as mother, father, age, plus, times. """
     def __init__(self, label, arity):
         super(self.__class__, self).__init__(label)
         self._arity = arity
@@ -39,8 +48,8 @@ class FunctionConstant(Constant):
     def arity_amount(self):
         return self._arity.amount
 
-# Relations such as knows, loves
 class RelationConstant(Constant):
+    """ Relations such as knows, loves. """
     def __init__(self, label, arity):
         super(self.__class__, self).__init__(label)
         self._arity = arity
@@ -87,11 +96,16 @@ class Signature(object):
 
     @property
     def base(self):
+        # TODO: Should be a generator/stream since function constants make it infinite
         return frozenset([
             p
             for r in self._relation_constants
             for p in r.get_sentence_permutations(self._object_constants) 
         ])
+
+class TruthAssignment(object):
+    def __init__(self, ground_sentences_to_value):
+        self._ground_sentences_to_value = ground_sentences_to_value
 
 class Term(object):
     def __init__(self, object):
@@ -148,8 +162,13 @@ class RelationalSentence(Sentence):
         return "%s(%s)" % (self._relation_constant, ",".join(term_reprs))
 
 
+# TODO: Same as prop logic
 class LogicalSentence(Sentence):
-    pass
+    __meta__ = ABCMeta
+
+    @abstractmethod
+    def eval(self, assignment):
+        pass
 
 class Negation(LogicalSentence):
     pass
@@ -172,6 +191,8 @@ class Equivalence(LogicalSentence):
 
 # Can be nested within other sentences
 class QuantifiedSentence(Sentence):
+    __meta__ = ABCMeta
+
     def __init__(self, quantified_variables, sentence):
         self._quantified_variables = tuple(quantified_variables)
         self._sentence = sentence
@@ -190,8 +211,29 @@ class QuantifiedSentence(Sentence):
     def is_open(self):
         return not self.is_closed
 
+    @abstractmethod
+    def eval(self, assignment):
+        pass
+
 class UniversalSentence(QuantifiedSentence):
-    pass
+    def eval(self, assignment):
+        # TODO: true if every instance of the scope of qualified sentence
+        # is true
+        pass
 
 class ExistentialSentence(QuantifiedSentence):
-    pass
+    def eval(self, assignment):
+        # TODO: true if some instances of the scope of qualified sentence
+        # is true
+        pass
+
+
+class Instance(object):
+    def __init__(self, sentence, variable_assignments):
+        self._sentence = sentence
+        self._variable_assignments = variable_assignments
+        # TODO: Assert all variables have been replaced
+
+    def eval(self, assignment):
+        # TODO: assign constants then eval sentence
+        pass

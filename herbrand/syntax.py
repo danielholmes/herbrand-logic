@@ -67,6 +67,7 @@ class RelationConstant(Constant):
         ])
 
 class Arity(object):
+    """ The number of arguments a function or relation can take. """
     def __init__(self, amount):
         assert(amount >= 1)
         self._amount = amount
@@ -171,19 +172,28 @@ class LogicalSentence(Sentence):
         pass
 
 class Negation(LogicalSentence):
-    pass
+    def __init__(self, target):
+        self._target = target
 
 class Conjunction(LogicalSentence):
-    pass
+    def __init__(self, conjunct_1, conjunct_2):
+        self._conjunct_1 = conjunct_1
+        self._conjunct_2 = conjunct_2
 
 class Disjunction(LogicalSentence):
-    pass
+    def __init__(self, disjunct_1, disjunct_2):
+        self._disjunct_1 = disjunct_1
+        self._disjunct_2 = disjunct_2
 
 class Implication(LogicalSentence):
-    pass
+    def __init__(self, antecedent, consequent):
+        self._antecedent = antecedent
+        self._consequent = consequent
 
 class Reduction(LogicalSentence):
-    pass
+    def __init__(self, consequent, antecedent):
+        self._consequent = consequent
+        self._antecedent = antecedent
 
 class Equivalence(LogicalSentence):
     pass
